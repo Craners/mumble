@@ -1,0 +1,25 @@
+{
+  "name": "mumble",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.15.4",
+    "querystring": "^0.2.0",
+    "request": "^2.81.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Craners/mumble.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Craners/mumble/issues"
+  },
+  "homepage": "https://github.com/Craners/mumble#readme",
+  "description": ""
+}
