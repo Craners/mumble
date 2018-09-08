@@ -2,12 +2,17 @@ let express = require('express');
 let request = require('request');
 var path = require('path');
 let querystring = require('querystring');
+var History = require('./models/History');
+var mongoose = require('mongoose')
 require('dotenv').config();
 
+var mongoDB = 'mongodb://amir:amir12@ds249992.mlab.com:49992/mumble';
+mongoose.connect(mongoDB);
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+
 let app = express()
-
 var auth_token;
-
 let redirect_uri = process.env.REDIRECT_URI || 'http://localhost:8888/callback';
 
 app.get('/', function (req, res) {
@@ -40,8 +45,7 @@ app.get('/callback', function (req, res) {
     }
     request.post(authOptions, function (error, response, body) {
         auth_token = body.access_token;
-        //let uri = process.env.FRONTEND_URI || 'http://localhost:8888'
-        res.redirect('/');
+        res.redirect('/spotify');
     })
 })
 
@@ -54,6 +58,31 @@ app.get("/spotify", function (req, res) {
         json: true
     }
     request.get(settings, function (error, response, body) {
+        var historyElement = new History({
+            years: [{
+                year: '2018',
+                days: [{
+                    day: '01/01',
+                    songs: [{
+                        id: 1203,
+                        played_at: Date.now()
+                    }]
+                },
+                {
+                    day: '02/01',
+                    songs: [{
+                        id: 2134,
+                        played_at: Date.now()
+                    }]
+                }]
+            }]
+        })
+
+        console.log(JSON.stringify(historyElement));
+        historyElement.save();
+
+        // console.log(historyElement.years[0].days[0].songs);
+
         console.log(response.body["items"][0]["track"]["name"])
         console.log(response.body["items"][0]["track"]["id"]);
         console.log(response.body["items"][0]["played_at"]);
