@@ -2,8 +2,8 @@ let express = require('express');
 let request = require('request');
 var path = require('path');
 let querystring = require('querystring');
-var History = require('./models/History');
-var mongoose = require('mongoose')
+var mongoose = require('mongoose');
+var Profile = require('./models/Profile');
 require('dotenv').config();
 
 var mongoDB = 'mongodb://amir:amir12@ds249992.mlab.com:49992/mumble';
@@ -45,7 +45,7 @@ app.get('/callback', function (req, res) {
     }
     request.post(authOptions, function (error, response, body) {
         auth_token = body.access_token;
-        res.redirect('/spotify');
+        res.redirect('/');
     })
 })
 
@@ -58,28 +58,7 @@ app.get("/spotify", function (req, res) {
         json: true
     }
     request.get(settings, function (error, response, body) {
-        var historyElement = new History({
-            years: [{
-                year: '2018',
-                days: [{
-                    day: '01/01',
-                    songs: [{
-                        id: 1203,
-                        played_at: Date.now()
-                    }]
-                },
-                {
-                    day: '02/01',
-                    songs: [{
-                        id: 2134,
-                        played_at: Date.now()
-                    }]
-                }]
-            }]
-        })
-
-        console.log(JSON.stringify(historyElement));
-        historyElement.save();
+        // historyElement.save();
 
         // console.log(historyElement.years[0].days[0].songs);
 
@@ -88,8 +67,58 @@ app.get("/spotify", function (req, res) {
         console.log(response.body["items"][0]["played_at"]);
         res.redirect('/');
     })
-})
+});
+
+app.get("/profile", function (req, res) {
+    let settings = {
+        url: 'https://api.spotify.com/v1/me/',
+        headers: {
+            'Authorization': `Bearer ${auth_token}`
+        },
+        json: true
+    }
+    request.get(settings, function (error, response, body) {
+        if (response.body["error"]) {
+            console.log(response.body);
+        }
+        else {
+
+            var awesome_instance = new Profile(
+                {
+                    name: response.body["display_name"],
+                    country: response.body["country"],
+                    id: response.body["id"],
+                    email: response.body["email"],
+                    history: [{
+                        years: [{
+                            year: '2018',
+                            days: [{
+                                day: '01/01',
+                                songs: [{
+                                    id: 1203,
+                                    played_at: Date.now()
+                                }]
+                            },
+                            {
+                                day: '02/01',
+                                songs: [{
+                                    id: 2134,
+                                    played_at: Date.now()
+                                }]
+                            }]
+                        }]
+                    }]
+                }
+            );
+            awesome_instance.save(function (err) {
+                if (err) console.log(err);
+                // saved!
+            });
+        }
+        res.redirect('/');
+    });
+});
 
 let port = process.env.PORT || 8888
-console.log(`Listening on port ${port}. Go /login to initiate authentication flow.`)
+console.log(`Listening on port https://localhost:${port}. Go /login to initiate authentication flow.`)
 app.listen(port)

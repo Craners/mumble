@@ -17,5 +17,4 @@ var HistorySchema = new Schema({
 
 });
 
-var History = mongoose.model('History', HistorySchema);
-module.exports = History;
+module.exports = HistorySchema;
