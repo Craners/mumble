@@ -6,9 +6,11 @@ require('dotenv').config();
 
 let app = express()
 
+var auth_token;
+
 let redirect_uri = process.env.REDIRECT_URI || 'http://localhost:8888/callback';
 
-app.get('/', function(req, res) {
+app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '/index.html'));
 });
 
@@ -37,9 +39,24 @@ app.get('/callback', function (req, res) {
         json: true
     }
     request.post(authOptions, function (error, response, body) {
-        var access_token = body.access_token
-        let uri = process.env.FRONTEND_URI || 'http://localhost:8888'
-        // res.redirect(uri + '?access_token=' + access_token)
+        auth_token = body.access_token;
+        //let uri = process.env.FRONTEND_URI || 'http://localhost:8888'
+        res.redirect('/');
+    })
+})
+
+app.get("/spotify", function (req, res) {
+    let settings = {
+        url: 'https://api.spotify.com/v1/me/player/recently-played',
+        headers: {
+            'Authorization': `Bearer ${auth_token}`
+        },
+        json: true
+    }
+    request.get(settings, function (error, response, body) {
+        console.log(response.body["items"][0]["track"]["name"])
+        console.log(response.body["items"][0]["track"]["id"]);
+        console.log(response.body["items"][0]["played_at"]);
         res.redirect('/');
     })
 })
