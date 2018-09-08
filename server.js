@@ -2,6 +2,16 @@ let express = require('express');
 let request = require('request');
 var path = require('path');
 let querystring = require('querystring');
+var mongoose = require('mongoose');
+var Profile = require('./models/Profile');
+var mongoDB = 'mongodb://localhost:27018/mumbleDev';
+mongoose.connect(mongoDB);
+mongoose.Promise = global.Promise;
+var db = mongoose.connection;
+
+//Bind connection to error event (to get notification of connection errors)
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+
 require('dotenv').config();
 
 let app = express()
@@ -54,13 +64,45 @@ app.get("/spotify", function (req, res) {
         json: true
     }
     request.get(settings, function (error, response, body) {
-        console.log(response.body["items"][0]["track"]["name"])
-        console.log(response.body["items"][0]["track"]["id"]);
-        console.log(response.body["items"][0]["played_at"]);
+        if (response.body["error"]) {
+            console.log(response.body);
+        }
+        else {
+            console.log(response.body["items"][0]["track"]["name"])
+            console.log(response.body["items"][0]["track"]["id"]);
+            console.log(response.body["items"][0]["played_at"]);
+        }
         res.redirect('/');
     })
-})
+});
+
+app.get("/profile", function (req, res) {
+    let settings = {
+        url: 'https://api.spotify.com/v1/me/',
+        headers: {
+            'Authorization': `Bearer ${auth_token}`
+        },
+        json: true
+    }
+    request.get(settings, function (error, response, body) {
+        if (response.body["error"]) {
+            console.log(response.body);
+        }
+        else {
+            console.log(response.body["display_name"])
+            console.log(response.body["email"]);
+            console.log(response.body["id"]);
+            console.log(response.body["country"]);
+            var awesome_instance = new Profile({ name: 'awesome' });
+            awesome_instance.save(function (err) {
+                if (err) return handleError(err);
+                // saved!
+            });
+        }
+        res.redirect('/');
+    });
+});
 
 let port = process.env.PORT || 8888
-console.log(`Listening on port ${port}. Go /login to initiate authentication flow.`)
+console.log(`Listening on port https://localhost:${port}. Go /login to initiate authentication flow.`)
 app.listen(port)
