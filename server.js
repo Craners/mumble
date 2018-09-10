@@ -4,6 +4,7 @@ var path = require('path');
 let querystring = require('querystring');
 var mongoose = require('mongoose');
 var Profile = require('./models/Profile');
+var routes = require('./routes/spotify');
 require('dotenv').config();
 
 var mongoDB = 'mongodb://amir:amir12@ds249992.mlab.com:49992/mumble';
@@ -68,6 +69,8 @@ app.get("/spotify", function (req, res) {
         res.redirect('/');
     })
 });
+
+app.use('/spotify2', routes);
 
 app.get("/profile", function (req, res) {
     let settings = {
