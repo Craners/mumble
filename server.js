@@ -4,7 +4,7 @@ var path = require('path');
 let querystring = require('querystring');
 var mongoose = require('mongoose');
 var Profile = require('./models/Profile');
-var routes = require('./routes/spotify');
+var routes = require('./routes/me');
 require('dotenv').config();
 
 var mongoDB = 'mongodb://amir:amir12@ds249992.mlab.com:49992/mumble';
@@ -48,7 +48,7 @@ app.get('/callback', function (req, res) {
         auth_token = body.access_token;
         res.redirect('/');
     })
-})
+});
 
 app.get("/spotify", function (req, res) {
     let settings = {
@@ -70,58 +70,15 @@ app.get("/spotify", function (req, res) {
     })
 });
 
-app.use('/spotify2', routes);
-
-app.get("/profile", function (req, res) {
-    let settings = {
-        url: 'https://api.spotify.com/v1/me/',
-        headers: {
-            'Authorization': `Bearer ${auth_token}`
-        },
-        json: true
+// app.use('/me', routes);
+app.use('/me', function (req, res, next) {
+    req.auth = {
+        auth_token: `${auth_token}`
     }
-    request.get(settings, function (error, response, body) {
-        if (response.body["error"]) {
-            console.log(response.body);
-        }
-        else {
+    next();        
+}, routes);
 
-            var awesome_instance = new Profile(
-                {
-                    name: response.body["display_name"],
-                    country: response.body["country"],
-                    id: response.body["id"],
-                    email: response.body["email"],
-                    history: [{
-                        years: [{
-                            year: '2018',
-                            days: [{
-                                day: '01/01',
-                                songs: [{
-                                    id: 1203,
-                                    played_at: Date.now()
-                                }]
-                            },
-                            {
-                                day: '02/01',
-                                songs: [{
-                                    id: 2134,
-                                    played_at: Date.now()
-                                }]
-                            }]
-                        }]
-                    }]
-                }
-            );
-            awesome_instance.save(function (err) {
-                if (err) console.log(err);
-                // saved!
-            });
-        }
-        res.redirect('/');
-    });
-});
 
 let port = process.env.PORT || 8888
-console.log(`Listening on port https://localhost:${port}. Go /login to initiate authentication flow.`)
-app.listen(port)
+console.log(`Listening on port http://localhost:${port}. Go /login to initiate authentication flow.`);
+app.listen(port);
