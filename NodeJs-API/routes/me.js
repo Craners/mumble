@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-var Profile = require('../models/Profile');
+var Profile = require('../repositories/profileRepo');
 
 // Get Homepage
 router.get('/', function (req, res) {

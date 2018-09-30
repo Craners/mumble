@@ -3,7 +3,7 @@ let request = require('request');
 var path = require('path');
 let querystring = require('querystring');
 var mongoose = require('mongoose');
-var ProfileRepo = require('./repositories/profile');
+var ProfileRepo = require('./repositories/profileRepo');
 var routes = require('./routes/me');
 require('dotenv').config();
 
