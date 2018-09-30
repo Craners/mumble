@@ -2,9 +2,10 @@ let express = require('express');
 let request = require('request');
 var path = require('path');
 let querystring = require('querystring');
-var mongoose = require('mongoose');
 var ProfileRepo = require('./repositories/profileRepo');
+var mongoose = require('mongoose');
 var routes = require('./routes/me');
+var spotifyRoute = require('./routes/spotify');
 require('dotenv').config();
 
 // var mongoDB = 'mongodb://root:root@localhost:27017/mumble';
@@ -51,23 +52,13 @@ app.get('/callback', function (req, res) {
     })
 });
 
-app.get("/spotify", function (req, res) {
-    //I have to get the most recent song//
-    let settings = {
-        url: 'https://api.spotify.com/v1/me/player/recently-played',
-        headers: {
-            'Authorization': `Bearer ${auth_token}`
-        },
-        json: true
+app.use("/spotify", function(req, res, next) {
+    req.auth = {
+        auth_token: `${auth_token}`
     }
-    request.get(settings, function (error, response, body) {   
-      //  ProfileRepo.getMostRecentSongUnixTimestamp('radu.stoica94');
-      //get this ID dynamically
-        ProfileRepo.updateProfile('radu.stoica94', response.body["items"]);
-
-        res.redirect('/');
-    })
-});
+    next();
+     res.end();
+}, spotifyRoute);
 
 // app.use('/me', routes);
 app.use('/me', function (req, res, next) {
@@ -75,7 +66,7 @@ app.use('/me', function (req, res, next) {
         auth_token: `${auth_token}`
     }
     next();
-    res.end()
+    res.end();
 }, routes);
 
 
