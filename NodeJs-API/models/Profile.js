@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-var HistorySchema = require('./History');
+var SongSchema = require('./Song');
 var request = require("request");
 
 
@@ -10,7 +10,8 @@ var ProfileSchema = new Schema({
     country: String,
     spotifyID: String,
     createdOn: { type: Date, default: Date.now },
-    history: [HistorySchema]
+    songs: [SongSchema],
+    //balance
 });
 
 
