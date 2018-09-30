@@ -75,7 +75,8 @@ app.use('/me', function (req, res, next) {
     req.auth = {
         auth_token: `${auth_token}`
     }
-    next();        
+    next();
+    res.end()
 }, routes);
 
 
