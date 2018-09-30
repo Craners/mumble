@@ -6,8 +6,7 @@ var mongoose = require('mongoose');
 
 
 function getProfile(auth_token) {
-    // var query = { id: id };
-    // SongSchema.findOne(query, callback);
+
     main("https://api.spotify.com/v1/me/", auth_token);
 }
 
@@ -39,14 +38,11 @@ function initialize(urls, auth_token) {
             if (err) {
                 reject(err);
             } else {
-                var query = Profile.findOne({ 'spotifyID': body.id });
+                var query = Profile.findOne({ 'spotifyID': body.id });                
                 query.exec(function (err, result) {
                     if (err) return handleError(err);
                     if (result) {
-                        //to:do
                         resolve(console.log('found it'));
-                        // result.rate += newBeer.rate;
-                        // result.save(callback);
                     }
                     if (!result) {
                         resolve(createProfile(body));

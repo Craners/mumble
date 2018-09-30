@@ -19,7 +19,7 @@ let redirect_uri = process.env.REDIRECT_URI || 'http://localhost:8888/callback';
 
 app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '/index.html'));
-});
+    });
 
 app.get('/login', function (req, res) {
     res.redirect('https://accounts.spotify.com/authorize?' +
@@ -63,7 +63,9 @@ app.get("/spotify", function (req, res) {
     request.get(settings, function (error, response, body) {   
       //  ProfileRepo.getMostRecentSongUnixTimestamp('radu.stoica94');
       //get this ID dynamically
-        ProfileRepo.updateProfile('radu.stoica94', response.body["items"]);
+      console.log(body);
+      
+        ProfileRepo.updateProfile('radu.stoica94', body["items"]);
 
         res.redirect('/');
     })
@@ -75,7 +77,7 @@ app.use('/me', function (req, res, next) {
         auth_token: `${auth_token}`
     }
     next();
-    res.end()
+    res.end();
 }, routes);
 
 
