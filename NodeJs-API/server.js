@@ -5,6 +5,7 @@ let querystring = require('querystring');
 var mongoose = require('mongoose');
 var ProfileRepo = require('./repositories/profileRepo');
 var routes = require('./routes/me');
+var cookieParser = require('cookie-parser'); 
 require('dotenv').config();
 
 // var mongoDB = 'mongodb://root:root@localhost:27017/mumble';
@@ -14,6 +15,7 @@ var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 let app = express()
+app.use(cookieParser());
 var auth_token;
 let redirect_uri = process.env.REDIRECT_URI || 'http://localhost:8888/callback';
 

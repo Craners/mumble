@@ -38,7 +38,8 @@ function initialize(urls, auth_token) {
             if (err) {
                 reject(err);
             } else {
-                var query = Profile.findOne({ 'spotifyID': body.id });                
+                var query = Profile.findOne({ 'spotifyID': body.id });
+                // resp.send('something');
                 query.exec(function (err, result) {
                     if (err) return handleError(err);
                     if (result) {
