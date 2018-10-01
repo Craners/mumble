@@ -6,6 +6,7 @@ var Profile = require('../repositories/profileRepo');
 router.get('/', function (req, res) {
 
     res.send("Page not found");
+    res.end();
 });
 
 module.exports = router;

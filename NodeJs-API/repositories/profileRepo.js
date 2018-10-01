@@ -1,5 +1,4 @@
 var Profile = require('../models/Profile');
-//var History = require('../models/History');
 var Song = require('../models/Song');
 var request = require("request");
 var mongoose = require('mongoose');
@@ -7,19 +6,18 @@ var mongoose = require('mongoose');
 
 function getProfile(auth_token) {
 
-    main("https://api.spotify.com/v1/me/", auth_token);
+    return main("https://api.spotify.com/v1/me/", auth_token);
 }
 
 function main(urls, auth_token) {
-    var initializePromise = initialize(urls, auth_token);
-    initializePromise.then(function (result) {
-        userDetails = result;
-        console.log("Initialized user details");
-        // Use user details from here
-        // console.log(userDetails)
-    }, function (err) {
-        console.log(err);
-    })
+    return initialize(urls, auth_token)
+        .then((result) => {
+            return result;
+            // Use user details from here
+            // console.log(userDetails)
+        }, function (err) {
+            console.log(err);
+        })
 }
 
 function initialize(urls, auth_token) {
@@ -38,12 +36,16 @@ function initialize(urls, auth_token) {
             if (err) {
                 reject(err);
             } else {
+                let check = false;
                 var query = Profile.findOne({ 'spotifyID': body.id });
+                if(query){
+                    check = true;
+                }
                 // resp.send('something');
                 query.exec(function (err, result) {
                     if (err) return handleError(err);
                     if (result) {
-                        resolve(console.log('found it'));
+                        resolve({'result':check,'name':result.name});
                     }
                     if (!result) {
                         resolve(createProfile(body));
@@ -59,7 +61,7 @@ var createProfile = function (body) {
     var name = body["display_name"];
     var country = body["country"];
     var spotifyId = body["id"];
-    var email = body["email"]; 
+    var email = body["email"];
 
     var profile = new Profile(
         {
@@ -73,6 +75,9 @@ var createProfile = function (body) {
     profile.save(function (err) {
         if (err) console.log(err);
     });
+
+    // console.log('user was created');
+    return profile;
 };
 
 var updateProfile = function (userId, items) {
@@ -105,9 +110,9 @@ var getMostRecentSongUnixTimestamp = function (userId) {
     // });
 
     Profile.aggregate([
-        {$match: {spotifyID: userId}},
-        {$unwind: "$songs"},
-        {$group: {_id: "$_id"}}
+        { $match: { spotifyID: userId } },
+        { $unwind: "$songs" },
+        { $group: { _id: "$_id" } }
     ])
 
     // Profile.findOne({ spotifyID: userId }, function(err, doc) {
