@@ -5,6 +5,7 @@ let querystring = require('querystring');
 var mongoose = require('mongoose');
 var ProfileRepo = require('./repositories/profileRepo');
 var routes = require('./routes/me');
+var otherRoutes = require('./routes/otherRoutes');
 var cookieParser = require('cookie-parser'); 
 require('dotenv').config();
 
@@ -82,6 +83,10 @@ app.use('/me', function (req, res, next) {
     res.end();
 }, routes);
 
+app.use("*",function(req,res,next){
+    next();
+    res.end();
+},otherRoutes);
 
 let port = process.env.PORT || 8888
 console.log(`Listening on port http://localhost:${port}. Go /login to initiate authentication flow.`);
