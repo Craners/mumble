@@ -1,7 +1,4 @@
 let express = require('express');
-let request = require('request');
-var path = require('path');
-let querystring = require('querystring');
 var mongoose = require('mongoose');
 var ProfileRepo = require('./repositories/profileRepo');
 var routes = require('./routes/me');
@@ -18,73 +15,36 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 let app = express()
 app.use(cookieParser());
 var auth_token;
-let redirect_uri = process.env.REDIRECT_URI || 'http://localhost:8888/callback';
 
-app.get('/', function (req, res) {
-    res.sendFile(path.join(__dirname + '/index.html'));
-});
 
-app.get('/login', function (req, res) {
-    res.redirect('https://accounts.spotify.com/authorize?' +
-        querystring.stringify({
-            response_type: 'code',
-            client_id: process.env.SPOTIFY_CLIENT_ID,
-            scope: 'user-read-private user-read-email user-read-recently-played',
-            redirect_uri
-        }))
-})
 
-app.get('/callback', function (req, res) {
-    let code = req.query.code || null
-    let authOptions = {
-        url: 'https://accounts.spotify.com/api/token',
-        form: {
-            code: code,
-            redirect_uri,
-            grant_type: 'authorization_code'
-        },
-        headers: {
-            'Authorization': 'Basic ' + (new Buffer(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64'))
-        },
-        json: true
-    }
-    request.post(authOptions, function (error, response, body) {
-        auth_token = body.access_token;
-        res.redirect('/');
-    })
-});
+// app.get("/spotify", function (req, res) {
+//     //I have to get the most recent song//
+//     let settings = {
+//         url: 'https://api.spotify.com/v1/me/player/recently-played',
+//         headers: {
+//             'Authorization': `Bearer ${auth_token}`
+//         },
+//         json: true
+//     }
+//     request.get(settings, function (error, response, body) {
+//         //  ProfileRepo.getMostRecentSongUnixTimestamp('radu.stoica94');
+//         //get this ID dynamically
+//         console.log(body);
 
-app.get("/spotify", function (req, res) {
-    //I have to get the most recent song//
-    let settings = {
-        url: 'https://api.spotify.com/v1/me/player/recently-played',
-        headers: {
-            'Authorization': `Bearer ${auth_token}`
-        },
-        json: true
-    }
-    request.get(settings, function (error, response, body) {
-        //  ProfileRepo.getMostRecentSongUnixTimestamp('radu.stoica94');
-        //get this ID dynamically
-        console.log(body);
+//         ProfileRepo.updateProfile('radu.stoica94', body["items"]);
 
-        ProfileRepo.updateProfile('radu.stoica94', body["items"]);
+//         res.redirect('/');
+//     })
+// });
 
-        res.redirect('/');
-    })
-});
 
-app.use('/me', function (req, res, next) {
+app.use(require('./routes/router'), () => {
+
     req.auth = {
         auth_token: `${auth_token}`
     }
-    // var answer = next();
-    console.log(next());
-}, routes);
-
-app.use("*", function (req, res, next) {
-    next();
-}, otherRoutes);
+}); 
 
 let port = process.env.PORT || 8888
 console.log(`Listening on port http://localhost:${port}. Go /login to initiate authentication flow.`);
