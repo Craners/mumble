@@ -50,6 +50,7 @@ router.get('/callback', function (req, res) {
     request.post(authOptions, function (error, response, body) {
         auth_token = body.access_token;
         req.session.auth_token = auth_token;
+        req.session.loggedin = true;
         res.redirect('/');
     })
 });
@@ -59,16 +60,18 @@ router.use('/me', function (req, res) {
     Profile.getProfile(req.auth).then((profileResult) => {
 
         ProfileSchema = profileResult;
-        if (ProfileSchema.result === true) {
+        if (ProfileSchema.result && req.session.loggedin) {
 
             res.send('Welcome back! ' + ProfileSchema.name);
         }
-        else {
+        else if (req.session.loggedin) {
 
             res.send('Welcome ' + ProfileSchema.name + ', You were registered as a new user');
         }
-        return { 'something': 'something' };
-        // res.end();
+        else {
+
+            res.send('Please login first');
+        }
     });
 });
 

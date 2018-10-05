@@ -1,8 +1,5 @@
 let express = require('express');
 var mongoose = require('mongoose');
-var ProfileRepo = require('./repositories/profileRepo');
-var routes = require('./routes/me');
-var otherRoutes = require('./routes/otherRoutes');
 var cookieParser = require('cookie-parser');
 var session = require('express-session')
 require('dotenv').config();
