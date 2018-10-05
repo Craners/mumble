@@ -4,6 +4,7 @@ var ProfileRepo = require('./repositories/profileRepo');
 var routes = require('./routes/me');
 var otherRoutes = require('./routes/otherRoutes');
 var cookieParser = require('cookie-parser');
+var session = require('express-session')
 require('dotenv').config();
 
 // var mongoDB = 'mongodb://root:root@localhost:27017/mumble';
@@ -14,8 +15,8 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 let app = express()
 app.use(cookieParser());
-var auth_token;
-
+var auth_token = false;
+app.use(session({ secret: 'secret' }));
 
 
 // app.get("/spotify", function (req, res) {
@@ -39,12 +40,16 @@ var auth_token;
 // });
 
 
-app.use(require('./routes/router'), () => {
+app.use((req, res, next) => {
 
-    req.auth = {
-        auth_token: `${auth_token}`
+    if (req.session.auth_token !== null) {
+
+        req.auth = req.session.auth_token;
+        // console.log('it had a token');
+        // console.log('Token:' + req.session.auth_token);
     }
-}); 
+    next()
+}, require('./routes/router'));
 
 let port = process.env.PORT || 8888
 console.log(`Listening on port http://localhost:${port}. Go /login to initiate authentication flow.`);

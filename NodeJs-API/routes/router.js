@@ -5,11 +5,13 @@ let querystring = require('querystring');
 let request = require('request');
 var Profile = require('../repositories/profileRepo');
 var ProfileSchema = require('../models/Profile');
+var session = require('express-session')
 
 let redirect_uri = process.env.REDIRECT_URI || 'http://localhost:8888/callback';
 
 //Middle ware that is specific to this router
 router.use(function timeLog(req, res, next) {
+
     console.log('request code: ' + res.statusCode);
     console.log('request url: ' + req.url);
     console.log('request date: ' + new Date().toUTCString());
@@ -47,16 +49,16 @@ router.get('/callback', function (req, res) {
     }
     request.post(authOptions, function (error, response, body) {
         auth_token = body.access_token;
+        req.session.auth_token = auth_token;
         res.redirect('/');
     })
 });
 
-router.use('/me', function (req, res, auth_token) {
+router.use('/me', function (req, res) {
 
-    var animal = req.auth;
-    Profile.getProfile(animal.auth_token).then((something) => {
+    Profile.getProfile(req.auth).then((profileResult) => {
 
-        ProfileSchema = something;
+        ProfileSchema = profileResult;
         if (ProfileSchema.result === true) {
 
             res.send('Welcome back! ' + ProfileSchema.name);
