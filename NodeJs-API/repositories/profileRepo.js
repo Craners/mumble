@@ -13,8 +13,6 @@ function main(urls, auth_token) {
     return initialize(urls, auth_token)
         .then((result) => {
             return result;
-            // Use user details from here
-            // console.log(userDetails)
         }, function (err) {
             console.log(err);
         })
@@ -33,31 +31,31 @@ function initialize(urls, auth_token) {
     return new Promise(function (resolve, reject) {
         // Do async job
         request.get(options, function (err, resp, body) {
-            if (err) {
+            if (err) {                
                 reject(err);
             } else {
                 let check = false;
                 var query = Profile.findOne({ 'spotifyID': body.id });
-                if(query){
+                if (query) {
                     check = true;
                 }
                 // resp.send('something');
                 query.exec(function (err, result) {
                     if (err) return handleError(err);
                     if (result) {
-                        resolve({'result':check,'name':result.name});
+                        resolve({ 'result': check, 'name': result.name, 'spotifyID': result.spotifyID });
                     }
                     if (!result) {
                         resolve(createProfile(body));
                     }
                 });
-                // resolve(body.id);
             }
         })
     })
 }
 
 var createProfile = function (body) {
+
     var name = body["display_name"];
     var country = body["country"];
     var spotifyId = body["id"];
@@ -76,7 +74,6 @@ var createProfile = function (body) {
         if (err) console.log(err);
     });
 
-    // console.log('user was created');
     return profile;
 };
 
