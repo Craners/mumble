@@ -10,9 +10,9 @@ mongoose.connect(mongoDB, { useNewUrlParser: true });
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
+let port = process.env.PORT || 8888
 let app = express()
 app.use(cookieParser());
-var auth_token = false;
 app.use(session({ secret: 'secret' }));
 
 
@@ -25,6 +25,5 @@ app.use((req, res, next) => {
     next()
 }, require('./routes/router'));
 
-let port = process.env.PORT || 8888
 console.log(`Listening on port http://localhost:${port}. Go /login to initiate authentication flow.`);
 app.listen(port);

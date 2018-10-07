@@ -51,7 +51,8 @@ router.get('/callback', function (req, res) {
         auth_token = body.access_token;
         req.session.auth_token = auth_token;
         req.session.loggedin = true;
-        res.redirect('/');
+        
+        res.redirect('/me');
     })
 });
 
@@ -64,13 +65,11 @@ router.use('/me', function (req, res) {
 
             req.session.spotifyID = ProfileSchema.spotifyID;
             res.send('Welcome back! ' + ProfileSchema.name);
-        }
-        else if (req.session.loggedin) {
+        } else if (req.session.loggedin) {
 
             req.session.spotifyID = ProfileSchema.spotifyID;
             res.send('Welcome ' + ProfileSchema.name + ', You were registered as a new user');
-        }
-        else {
+        } else {
 
             res.send('Please login first');
         }
@@ -79,27 +78,20 @@ router.use('/me', function (req, res) {
 
 router.use('/spotify', function (req, res) {
 
-    //I have to get the most recent song//
-    let settings = {
-        url: 'https://api.spotify.com/v1/me/player/recently-played',
-        headers: {
-            'Authorization': `Bearer ${req.session.auth_token}`
-        },
-        json: true
+    if (req.session.spotifyID === undefined) {
+        res.send('Spotify Id missing. Call /me');
+    } else if (req.session.loggedin) {
+
+        var spotifyId = req.session.spotifyID;
+        var auth_token = req.session.auth_token;
+
+        Profile.updateRecentlyPlayedSongs(spotifyId, auth_token);
+        res.send('Updated profile.');
+
+    } else {
+
+        res.send('Please login first');
     }
-    request.get(settings, function (error, response, body) {
-        
-        if (req.session.loggedin) {
-
-            Profile.updateProfile(req.session.spotifyID, body["items"]);
-            res.send(body);
-        } else {
-
-            res.send('Please login first');
-        }
-
-        // res.redirect('/');
-    })
 });
 
 router.get("*", function (req, res) {
