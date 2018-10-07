@@ -6,7 +6,13 @@ var getUnixTimestamp = function(date)
 var getUnixTimeStampClean = function(date)
 {
     var unixTimeStamp = getUnixTimestamp(date);
-    return unixTimeStamp.toString().replace(/\D/g,'');
+    var timestamp = unixTimeStamp.toString().replace(/\D/g,'');
+
+    if(timestamp.length === 12)
+    {
+        timestamp = `${timestamp}0`;
+    }
+    return timestamp;
 }
 
 module.exports = {

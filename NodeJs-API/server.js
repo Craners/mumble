@@ -14,9 +14,10 @@ mongoose.connect(mongoDB, { useNewUrlParser: true });
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
+let port = process.env.PORT || 8888
 let app = express()
 var auth_token;
-let redirect_uri = process.env.REDIRECT_URI || 'http://localhost:8888/callback';
+let redirect_uri = process.env.REDIRECT_URI || `http://localhost:${port}/callback`;
 
 app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '/index.html'));
@@ -70,6 +71,5 @@ app.use('/me', function (req, res, next) {
 }, routes);
 
 
-let port = process.env.PORT || 8888
 console.log(`Listening on port http://localhost:${port}. Go /login to initiate authentication flow.`);
 app.listen(port);

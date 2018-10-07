@@ -14,18 +14,8 @@ function getProfile(auth_token) {
 
 function updateRecentlyPlayedSongs(userId, auth_token) {
     var url = 'https://api.spotify.com/v1/me/player/recently-played?limit=50';
-    //figure out async here -> 
-    var timestamp = getMostRecentSongUnixTimestamp(userId);
-    console.log(timestamp);
 
-    if (timestamp !== undefined) {
-        url = url + `$after=${timestamp}`;
-    }
-
-    console.log(url);
-    
-
-    initializePromiseRecentlyPlayedSongs(url, auth_token, userId);
+    updateSongs(url, userId, auth_token, initializePromiseRecentlyPlayedSongs);
 }
 
 function initializePromiseRecentlyPlayedSongs(url, auth_token, userId) {
@@ -48,8 +38,7 @@ function initializePromiseRecentlyPlayedSongs(url, auth_token, userId) {
         })
     });
 
-    promise.then(function(result) {
-    }, function(err) {
+    promise.then(function (result) {}, function (err) {
         console.log(err);
     })
 }
@@ -102,6 +91,7 @@ function initialize(urls, auth_token) {
     })
 }
 
+//repo
 var createProfile = function (body) {
     var name = body["display_name"];
     var country = body["country"];
@@ -120,8 +110,12 @@ var createProfile = function (body) {
     });
 };
 
+//repo
 var updateProfile = function (userId, items) {
-
+    
+    if (items === undefined) {
+        console.log("items not found.");
+    }
     //check if undefined (items)
     items.forEach(item => {
         var spotifyId = item["track"]["id"];
@@ -148,7 +142,8 @@ var updateProfile = function (userId, items) {
     });
 }
 
-var getMostRecentSongUnixTimestamp = function (userId) {
+//repo
+var updateSongs = function (url, userId, auth_token, callback) {
 
     Profile.aggregate([{
             $project: {
@@ -172,21 +167,23 @@ var getMostRecentSongUnixTimestamp = function (userId) {
         {
             $limit: 1
         }
-    ]).exec(function (err, data) {
+    ], function (err, data) {
         if (err) {
             console.log(err);
         }
         var item = data[0];
 
-        if (item === undefined) {
-            return null;
+        if (item !== undefined) {
+            var timestamp = item["songs"]["played_at"];
+            timestamp = new Date(timestamp);
+            timestamp = dateUtil.getUnixTimeStampClean(timestamp);
+    
+            if (timestamp !== undefined) {
+                url = url + `&after=${timestamp}`;
+            }
         }
-
-        var timestamp = data[0]["songs"]["played_at"];
-        timestamp = new Date(timestamp);
-        timestamp = dateUtil.getUnixTimeStampClean(timestamp);
-
-        return timestamp;
+            
+        callback(url, auth_token, userId);
     });
 }
 
