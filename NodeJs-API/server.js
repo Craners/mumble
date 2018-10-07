@@ -1,11 +1,7 @@
 let express = require('express');
-let request = require('request');
-var path = require('path');
-let querystring = require('querystring');
-var ProfileRepo = require('./repositories/profileRepo');
 var mongoose = require('mongoose');
-var routes = require('./routes/me');
-var spotifyRoute = require('./routes/spotify');
+var cookieParser = require('cookie-parser');
+var session = require('express-session')
 require('dotenv').config();
 
 // var mongoDB = 'mongodb://root:root@localhost:27017/mumble';
@@ -16,60 +12,18 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 let port = process.env.PORT || 8888
 let app = express()
-var auth_token;
-let redirect_uri = process.env.REDIRECT_URI || `http://localhost:${port}/callback`;
+app.use(cookieParser());
+app.use(session({ secret: 'secret' }));
 
-app.get('/', function (req, res) {
-    res.sendFile(path.join(__dirname + '/index.html'));
-});
 
-app.get('/login', function (req, res) {
-    res.redirect('https://accounts.spotify.com/authorize?' +
-        querystring.stringify({
-            response_type: 'code',
-            client_id: process.env.SPOTIFY_CLIENT_ID,
-            scope: 'user-read-private user-read-email user-read-recently-played',
-            redirect_uri
-        }))
-})
+app.use((req, res, next) => {
 
-app.get('/callback', function (req, res) {
-    let code = req.query.code || null
-    let authOptions = {
-        url: 'https://accounts.spotify.com/api/token',
-        form: {
-            code: code,
-            redirect_uri,
-            grant_type: 'authorization_code'
-        },
-        headers: {
-            'Authorization': 'Basic ' + (new Buffer(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64'))
-        },
-        json: true
+    if (req.session.auth_token !== null) {
+
+        req.auth = req.session.auth_token;
     }
-    request.post(authOptions, function (error, response, body) {
-        auth_token = body.access_token;
-        res.redirect('/');
-    })
-});
-
-app.use("/spotify", function(req, res, next) {
-    req.auth = {
-        auth_token: `${auth_token}`
-    }
-    next();
-     res.end();
-}, spotifyRoute);
-
-// app.use('/me', routes);
-app.use('/me', function (req, res, next) {
-    req.auth = {
-        auth_token: `${auth_token}`
-    }
-    next();
-    res.end();
-}, routes);
-
+    next()
+}, require('./routes/router'));
 
 console.log(`Listening on port http://localhost:${port}. Go /login to initiate authentication flow.`);
 app.listen(port);
