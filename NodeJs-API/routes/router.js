@@ -62,10 +62,12 @@ router.use('/me', function (req, res) {
         ProfileSchema = profileResult;
         if (ProfileSchema.result && req.session.loggedin) {
 
+            req.session.spotifyID = ProfileSchema.spotifyID;
             res.send('Welcome back! ' + ProfileSchema.name);
         }
         else if (req.session.loggedin) {
 
+            req.session.spotifyID = ProfileSchema.spotifyID;
             res.send('Welcome ' + ProfileSchema.name + ', You were registered as a new user');
         }
         else {
@@ -75,9 +77,29 @@ router.use('/me', function (req, res) {
     });
 });
 
-// Define the about route
-router.get('/about', function (req, res) {
-    res.send('About us');
+router.use('/spotify', function (req, res) {
+
+    //I have to get the most recent song//
+    let settings = {
+        url: 'https://api.spotify.com/v1/me/player/recently-played',
+        headers: {
+            'Authorization': `Bearer ${req.session.auth_token}`
+        },
+        json: true
+    }
+    request.get(settings, function (error, response, body) {
+        
+        if (req.session.loggedin) {
+
+            Profile.updateProfile(req.session.spotifyID, body["items"]);
+            res.send(body);
+        } else {
+
+            res.send('Please login first');
+        }
+
+        // res.redirect('/');
+    })
 });
 
 router.get("*", function (req, res) {

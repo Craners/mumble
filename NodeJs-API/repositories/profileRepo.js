@@ -43,7 +43,7 @@ function initialize(urls, auth_token) {
                 query.exec(function (err, result) {
                     if (err) return handleError(err);
                     if (result) {
-                        resolve({ 'result': check, 'name': result.name });
+                        resolve({ 'result': check, 'name': result.name, 'spotifyID': result.spotifyID });
                     }
                     if (!result) {
                         resolve(createProfile(body));
