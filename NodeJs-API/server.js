@@ -2,6 +2,7 @@ let express = require('express');
 var mongoose = require('mongoose');
 var cookieParser = require('cookie-parser');
 var session = require('express-session')
+const cors = require('cors')
 require('dotenv').config();
 
 // var mongoDB = 'mongodb://root:root@localhost:27017/mumble';
@@ -24,6 +25,13 @@ app.use((req, res, next) => {
     }
     next()
 }, require('./routes/router'));
+
+var corsOptions = {
+    origin: 'http://example.com',
+    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204 
+};
+
+app.use(cors(corsOptions));
 
 console.log(`Listening on port http://localhost:${port}. Go /login to initiate authentication flow.`);
 app.listen(port);

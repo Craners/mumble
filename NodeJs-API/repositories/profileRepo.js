@@ -82,16 +82,16 @@ function expload(body, type) {
     body.forEach((index) => {
 
         let obj = {};
+        obj.name = index.name;
         if (type == 'artists') {
-            obj.name = index.name;
             obj.genre = index.genres;
             obj.image = index.images[0].url;
         } else {
             obj.image = index.album.images[0].url;
-            obj.name = [];
+            obj.artistsName = [];
             let tempArrayArtists = index.artists;
             tempArrayArtists.forEach((artist) => {
-                obj.name.push(artist.name);
+                obj.artistsName.push(artist.name);
             });
         }
         obj.type = index.type;
