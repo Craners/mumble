@@ -28,7 +28,7 @@ router.get('/login', function (req, res) {
         querystring.stringify({
             response_type: 'code',
             client_id: process.env.SPOTIFY_CLIENT_ID,
-            scope: 'user-read-private user-read-email user-read-recently-played',
+            scope: 'user-read-private user-read-email user-read-recently-played user-top-read',
             redirect_uri
         }))
 })
@@ -77,6 +77,14 @@ router.use('/me', function (req, res) {
     });
 });
 
+router.use('/top/:type', function (req, res) {
+    // type can be artists or tracks
+    // depending on type you get a different obj with different fields
+    Profile.getTop(req.auth, req.params.type).then((something) => {
+        res.send(something);
+    });
+});
+
 router.use('/spotify', function (req, res) {
 
     //I have to get the most recent song//
@@ -88,7 +96,7 @@ router.use('/spotify', function (req, res) {
         json: true
     }
     request.get(settings, function (error, response, body) {
-        
+
         if (req.session.loggedin) {
 
             Profile.updateProfile(req.session.spotifyID, body["items"]);
@@ -97,8 +105,6 @@ router.use('/spotify', function (req, res) {
 
             res.send('Please login first');
         }
-
-        // res.redirect('/');
     })
 });
 

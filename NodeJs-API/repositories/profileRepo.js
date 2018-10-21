@@ -9,6 +9,67 @@ function getProfile(auth_token) {
     return main("https://api.spotify.com/v1/me/", auth_token);
 }
 
+function getTop(auth_token, type) {
+
+    return topPromise("https://api.spotify.com/v1/me/top/", auth_token, type);
+}
+
+function topPromise(url, auth_token, type) {
+    return initializeTop(url, auth_token, type)
+        .then((result) => {
+            return result;
+        }, function (err) {
+            console.log(err);
+        })
+}
+
+function initializeTop(url, auth_token, type) {
+
+    let settings = {
+        url: `${url}${type}`,
+        qs: { time_range: 'short_term', limit: '10' },
+        headers: {
+            'Authorization': `Bearer ${auth_token}`
+        },
+        json: true
+    };
+    return new Promise(function (resolve, reject) {
+        // Do async job
+        request.get(settings, (err, resp, body) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(expload(body["items"], type));
+            }
+        })
+    });
+}
+
+//{ 'name': body["items"][0].name, 'genre': body["items"][0].genres }
+function expload(body, type) {
+
+    let result = [];
+    body.forEach((index) => {
+
+        let obj = {};
+        if (type == 'artists') {
+            obj.name = index.name;
+            obj.genre = index.genres;
+            obj.image = index.images[0].url;
+        } else {
+            obj.image = index.album.images[0].url;
+            obj.name = [];
+            let tempArrayArtists = index.artists;
+            tempArrayArtists.forEach((artist) => {
+                obj.name.push(artist.name);
+            });
+        }
+        obj.type = index.type;
+        result.push(obj);
+    });
+    return result;
+}
+
 function main(urls, auth_token) {
     return initialize(urls, auth_token)
         .then((result) => {
@@ -31,7 +92,7 @@ function initialize(urls, auth_token) {
     return new Promise(function (resolve, reject) {
         // Do async job
         request.get(options, function (err, resp, body) {
-            if (err) {                
+            if (err) {
                 reject(err);
             } else {
                 let check = false;
@@ -120,5 +181,6 @@ var getMostRecentSongUnixTimestamp = function (userId) {
 module.exports = {
     updateProfile,
     getMostRecentSongUnixTimestamp,
-    getProfile
+    getProfile,
+    getTop
 }
