@@ -8,7 +8,8 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}\\server.js"
+            "envFile": "${workspaceRoot}/NodeJs-API/.env",
+            "program": "${workspaceFolder}/NodeJs-API/server.js"
         }
     ]
 }

@@ -1,12 +1,42 @@
 var Profile = require('../models/Profile');
-var Song = require('../models/Song');
 var request = require("request");
 var mongoose = require('mongoose');
-
+var dateUtil = require('../helpers/dateUtil');
+var baseUrl = "https://api.spotify.com/v1/me";
 
 function getProfile(auth_token) {
 
-    return main("https://api.spotify.com/v1/me/", auth_token);
+    return main(baseUrl, auth_token);
+}
+
+function updateRecentlyPlayedSongs(userId, auth_token) {
+    var url = `${baseUrl}/player/recently-played?limit=50`;
+
+    updateSongs(url, userId, auth_token, initializePromiseRecentlyPlayedSongs);
+}
+
+function initializePromiseRecentlyPlayedSongs(url, auth_token, userId) {
+    var options = {
+        url: url,
+        headers: {
+            'Authorization': `Bearer ${auth_token}`
+        },
+        json: true
+    };
+
+    var promise = new Promise(function (resolve, reject) {
+        request.get(options, function (err, resp, body) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(updateProfile(userId, body["items"]));
+            }
+        })
+    });
+
+    promise.then(function (err) {
+        console.log(err);
+    })
 }
 
 function getTop(auth_token, type) {
@@ -115,6 +145,7 @@ function initialize(urls, auth_token) {
     })
 }
 
+//repo
 var createProfile = function (body) {
 
     var name = body["display_name"];
@@ -138,15 +169,30 @@ var createProfile = function (body) {
     return profile;
 };
 
+//repo
 var updateProfile = function (userId, items) {
 
-    //check if undefined (items)
+    if (items === undefined) {
+        console.log("items not found.");
+        return;
+    }
+
     items.forEach(item => {
         var spotifyId = item["track"]["id"];
         var played_at = item["played_at"];
 
-        Profile.findOne({ spotifyID: userId }, function (err, profile) {
-            if (err) { console.log(err); }
+        Profile.findOne({
+            spotifyID: userId
+        }, function (err, profile) {
+            if (err) {
+                console.log(err);
+                return;
+            }
+
+            if (profile === null) {
+                console.log("profile is null. (updateProfile)");
+                return;
+            }
 
             profile.songs.push({
                 id: spotifyId,
@@ -154,33 +200,63 @@ var updateProfile = function (userId, items) {
             })
 
             profile.save(function (err) {
-                if (err) { console.log(err); }
+                if (err) {
+                    console.log(err);
+                    return;
+                }
             });
         });
     });
 }
 
-var getMostRecentSongUnixTimestamp = function (userId) {
-    // Profile.find({spotifyID: userId}).sort([['songs.played_at', 'desc']]).limit(1).exec(function(err, docs) {
-    //    // console.log(docs.songs[0].played_at);
-    //     console.log(docs[0].songs[0]);
+//repo
+var updateSongs = function (url, userId, auth_token, callback) {
 
-    // });
+    Profile.aggregate([{
+        $project: {
+            '__v': 0,
+            '_id': 0,
+            'songs._id': 0
+        }
+    },
+    {
+        $match: {
+            spotifyID: userId
+        }
+    }, {
+        $unwind: "$songs"
+    },
+    {
+        $sort: {
+            "songs.played_at": -1
+        }
+    },
+    {
+        $limit: 1
+    }
+    ], function (err, data) {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        var item = data[0];
 
-    Profile.aggregate([
-        { $match: { spotifyID: userId } },
-        { $unwind: "$songs" },
-        { $group: { _id: "$_id" } }
-    ])
+        if (item !== undefined) {
+            var timestamp = item["songs"]["played_at"];
+            timestamp = new Date(timestamp);
+            timestamp = dateUtil.getUnixTimeStampClean(timestamp);
 
-    // Profile.findOne({ spotifyID: userId }, function(err, doc) {
-    //     doc.songs.sort(function)
-    // })
+            if (timestamp !== undefined) {
+                url = url + `&after=${timestamp}`;
+            }
+        }
+
+        callback(url, auth_token, userId);
+    });
 }
 
 module.exports = {
-    updateProfile,
-    getMostRecentSongUnixTimestamp,
+    updateRecentlyPlayedSongs,
     getProfile,
     getTop
 }
