@@ -5,9 +5,17 @@ let querystring = require('querystring');
 let request = require('request');
 var Profile = require('../repositories/profileRepo');
 var ProfileSchema = require('../models/Profile');
-var session = require('express-session')
+var session = require('express-session');
+var CronJob = require('cron').CronJob;
 
 let redirect_uri = process.env.REDIRECT_URI || 'http://localhost:8888/callback';
+
+// function interval() {
+//     console.log("can't stop me");
+    
+// }
+
+// setInterval(interval, 1000);
 
 //Middle ware that is specific to this router
 router.use(function timeLog(req, res, next) {
@@ -49,12 +57,28 @@ router.get('/callback', function (req, res) {
     }
     request.post(authOptions, function (error, response, body) {
         auth_token = body.access_token;
+        var refresh_token = body.refresh_token;
         req.session.auth_token = auth_token;
         req.session.loggedin = true;
+
+        startCronJob(refresh_token);
+        //
+        //console.log(body);
         
+
         res.redirect('/me');
     })
 });
+
+var startCronJob = function(refresh_token)
+{
+    const job = new CronJob('*/10 * * * * *', function() {
+
+        Profile.refreshToken(refresh_token);
+    });
+
+    job.start();
+}
 
 router.use('/me', function (req, res) {
 

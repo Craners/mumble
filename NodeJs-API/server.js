@@ -1,7 +1,8 @@
 let express = require('express');
 var mongoose = require('mongoose');
 var cookieParser = require('cookie-parser');
-var session = require('express-session')
+var session = require('express-session');
+const bodyParser = require('body-parser');
 const cors = require('cors')
 require('dotenv').config();
 
@@ -14,6 +15,7 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 let port = process.env.PORT || 8888
 let app = express()
 app.use(cookieParser());
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(session({ secret: 'secret' }));
 
 
