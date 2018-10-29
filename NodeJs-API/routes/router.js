@@ -103,6 +103,9 @@ router.use('/spotify', function (req, res) {
     }
 });
 
+router.use('/assets',express.static('assets'));
+router.use('/images',express.static('images'));
+
 router.get("*", function (req, res) {
     res.send("Page not found");
     res.end();
