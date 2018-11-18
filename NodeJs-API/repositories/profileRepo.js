@@ -13,6 +13,7 @@ function updateRecentlyPlayedSongs(userId, auth_token) {
     var url = `${baseUrl}/player/recently-played?limit=50`;
 
     updateSongs(url, userId, auth_token, initializePromiseRecentlyPlayedSongs);
+    console.log("Updated!!!MFFFF!");
 }
 
 function initializePromiseRecentlyPlayedSongs(url, auth_token, userId) {
@@ -154,7 +155,7 @@ function initialize(urls, auth_token) {
     })
 }
 
-var refreshToken = function (refresh_token) {
+var refreshTokenAndUpdateSongs = function (refresh_token, callback) {
     let authOptions = {
         url: 'https://accounts.spotify.com/api/token',
         form: {
@@ -167,7 +168,8 @@ var refreshToken = function (refresh_token) {
         json: true
     }
     request.post(authOptions, function (error, response, body) {
-        console.log(body.access_token);
+      //  console.log(body.access_token);
+        callback(body.access_token);
     })
 };
 
@@ -283,5 +285,5 @@ module.exports = {
     updateRecentlyPlayedSongs,
     getProfile,
     getTop,
-    refreshToken
+    refreshTokenAndUpdateSongs
 }
