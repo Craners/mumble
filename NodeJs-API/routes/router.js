@@ -63,7 +63,7 @@ router.get('/callback', function (req, res) {
 
 var startCronJob = function (refresh_token, callback) {
 
-    new CronJob('0 0/55 * 1/1 * ? *', function () {
+    new CronJob('0 */55 * * * *', function () {
 
         Profile.refreshTokenAndUpdateSongs(refresh_token, callback);
 
