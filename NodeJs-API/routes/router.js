@@ -92,7 +92,6 @@ router.use('/me', function (req, res) {
         ProfileSchema = profileResult;
         if (ProfileSchema.result && req.session.loggedin) {
             req.session.spotifyID = ProfileSchema.spotifyID;
-            startCronJob(req.session.refresh_token, callback);
 
             res.send('Welcome back! ' + ProfileSchema.name);
         } else if (req.session.loggedin) {
