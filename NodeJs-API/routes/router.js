@@ -22,6 +22,7 @@ router.use(function timeLog(req, res, next) {
 router.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '../../index.html'));
 });
+// router.use(express.static(path.join(__dirname, '../../assets')));
 
 router.get('/login', function (req, res) {
     res.redirect('https://accounts.spotify.com/authorize?' +
@@ -101,6 +102,9 @@ router.use('/spotify', function (req, res) {
         res.send('Please login first');
     }
 });
+
+router.use('/assets',express.static('assets'));
+router.use('/images',express.static('images'));
 
 router.get("*", function (req, res) {
     res.send("Page not found");
