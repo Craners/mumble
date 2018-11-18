@@ -5,11 +5,12 @@ let querystring = require('querystring');
 let request = require('request');
 var Profile = require('../repositories/profileRepo');
 var ProfileSchema = require('../models/Profile');
-var session = require('express-session')
+var session = require('express-session');
+var CronJob = require('cron').CronJob;
 
 let redirect_uri = process.env.REDIRECT_URI || 'http://localhost:8888/callback';
 
-//Middle ware that is specific to this router
+//Middleware that is specific to this router
 router.use(function timeLog(req, res, next) {
 
     console.log('request code: ' + res.statusCode);
@@ -49,26 +50,55 @@ router.get('/callback', function (req, res) {
         json: true
     }
     request.post(authOptions, function (error, response, body) {
+
         auth_token = body.access_token;
+
+        req.session.refresh_token = body.refresh_token;
         req.session.auth_token = auth_token;
         req.session.loggedin = true;
-        
+
         res.redirect('/me');
     })
 });
+
+var startCronJob = function (refresh_token, callback) {
+
+    new CronJob('*/30 * * * * *', function () {
+
+        Profile.refreshTokenAndUpdateSongs(refresh_token, callback);
+
+    }).start();
+}
 
 router.use('/me', function (req, res) {
 
     Profile.getProfile(req.auth).then((profileResult) => {
 
+        var callback = function (new_access_token) {
+
+            req.session.spotifyID = req.session.spotifyID;
+            req.session.loggedin = true;
+            req.session.auth_token = new_access_token;
+
+            req.session.save(function (err) {
+                if (err) {
+                    console.log(err);
+                }
+            });
+
+            Profile.updateRecentlyPlayedSongs(req.session.spotifyID, req.session.auth_token);
+        };
+
         ProfileSchema = profileResult;
         if (ProfileSchema.result && req.session.loggedin) {
-
             req.session.spotifyID = ProfileSchema.spotifyID;
+            startCronJob(req.session.refresh_token, callback);
+
             res.send('Welcome back! ' + ProfileSchema.name);
         } else if (req.session.loggedin) {
-
             req.session.spotifyID = ProfileSchema.spotifyID;
+            startCronJob(req.session.refresh_token, callback);
+
             res.send('Welcome ' + ProfileSchema.name + ', You were registered as a new user');
         } else {
 

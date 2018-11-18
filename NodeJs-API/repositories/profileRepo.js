@@ -13,6 +13,7 @@ function updateRecentlyPlayedSongs(userId, auth_token) {
     var url = `${baseUrl}/player/recently-played?limit=50`;
 
     updateSongs(url, userId, auth_token, initializePromiseRecentlyPlayedSongs);
+    console.log("Updated!!!MFFFF!");
 }
 
 function initializePromiseRecentlyPlayedSongs(url, auth_token, userId) {
@@ -57,7 +58,10 @@ function initializeTop(url, auth_token, type) {
 
     let settings = {
         url: `${url}${type}`,
-        qs: { time_range: 'short_term', limit: '10' },
+        qs: {
+            time_range: 'short_term',
+            limit: '10'
+        },
         headers: {
             'Authorization': `Bearer ${auth_token}`
         },
@@ -126,7 +130,9 @@ function initialize(urls, auth_token) {
                 reject(err);
             } else {
                 let check = false;
-                var query = Profile.findOne({ 'spotifyID': body.id });
+                var query = Profile.findOne({
+                    'spotifyID': body.id
+                });
                 if (query) {
                     check = true;
                 }
@@ -134,7 +140,11 @@ function initialize(urls, auth_token) {
                 query.exec(function (err, result) {
                     if (err) return handleError(err);
                     if (result) {
-                        resolve({ 'result': check, 'name': result.name, 'spotifyID': result.spotifyID });
+                        resolve({
+                            'result': check,
+                            'name': result.name,
+                            'spotifyID': result.spotifyID
+                        });
                     }
                     if (!result) {
                         resolve(createProfile(body));
@@ -145,6 +155,24 @@ function initialize(urls, auth_token) {
     })
 }
 
+var refreshTokenAndUpdateSongs = function (refresh_token, callback) {
+    let authOptions = {
+        url: 'https://accounts.spotify.com/api/token',
+        form: {
+            refresh_token: refresh_token,
+            grant_type: 'refresh_token'
+        },
+        headers: {
+            'Authorization': 'Basic ' + (new Buffer(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64'))
+        },
+        json: true
+    }
+    request.post(authOptions, function (error, response, body) {
+      //  console.log(body.access_token);
+        callback(body.access_token);
+    })
+};
+
 //repo
 var createProfile = function (body) {
 
@@ -153,15 +181,13 @@ var createProfile = function (body) {
     var spotifyId = body["id"];
     var email = body["email"];
 
-    var profile = new Profile(
-        {
-            _id: new mongoose.Types.ObjectId(),
-            name: name,
-            country: country,
-            spotifyID: spotifyId,
-            email: email
-        }
-    );
+    var profile = new Profile({
+        _id: new mongoose.Types.ObjectId(),
+        name: name,
+        country: country,
+        spotifyID: spotifyId,
+        email: email
+    });
     profile.save(function (err) {
         if (err) console.log(err);
     });
@@ -213,27 +239,27 @@ var updateProfile = function (userId, items) {
 var updateSongs = function (url, userId, auth_token, callback) {
 
     Profile.aggregate([{
-        $project: {
-            '__v': 0,
-            '_id': 0,
-            'songs._id': 0
+            $project: {
+                '__v': 0,
+                '_id': 0,
+                'songs._id': 0
+            }
+        },
+        {
+            $match: {
+                spotifyID: userId
+            }
+        }, {
+            $unwind: "$songs"
+        },
+        {
+            $sort: {
+                "songs.played_at": -1
+            }
+        },
+        {
+            $limit: 1
         }
-    },
-    {
-        $match: {
-            spotifyID: userId
-        }
-    }, {
-        $unwind: "$songs"
-    },
-    {
-        $sort: {
-            "songs.played_at": -1
-        }
-    },
-    {
-        $limit: 1
-    }
     ], function (err, data) {
         if (err) {
             console.log(err);
@@ -258,5 +284,6 @@ var updateSongs = function (url, userId, auth_token, callback) {
 module.exports = {
     updateRecentlyPlayedSongs,
     getProfile,
-    getTop
+    getTop,
+    refreshTokenAndUpdateSongs
 }
