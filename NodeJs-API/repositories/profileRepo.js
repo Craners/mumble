@@ -13,7 +13,6 @@ function updateRecentlyPlayedSongs(userId, auth_token) {
     var url = `${baseUrl}/player/recently-played?limit=50`;
 
     updateSongs(url, userId, auth_token, initializePromiseRecentlyPlayedSongs);
-    console.log("Updated!!!MFFFF!");
 }
 
 function initializePromiseRecentlyPlayedSongs(url, auth_token, userId) {
@@ -36,7 +35,10 @@ function initializePromiseRecentlyPlayedSongs(url, auth_token, userId) {
     });
 
     promise.then(function (err) {
-        console.log(err);
+        if(err)
+        {
+            console.log(err);
+        }
     })
 }
 
@@ -205,6 +207,7 @@ var updateProfile = function (userId, items) {
 
     items.forEach(item => {
         var spotifyId = item["track"]["id"];
+        var name = item["track"]["name"];
         var played_at = item["played_at"];
 
         Profile.findOne({
@@ -222,7 +225,8 @@ var updateProfile = function (userId, items) {
 
             profile.songs.push({
                 id: spotifyId,
-                played_at: played_at
+                played_at: played_at,
+                name: name
             })
 
             profile.save(function (err) {
@@ -275,6 +279,8 @@ var updateSongs = function (url, userId, auth_token, callback) {
             if (timestamp !== undefined) {
                 url = url + `&after=${timestamp}`;
             }
+
+            console.log(`${userId}:${item["songs"]["name"]}-${item["songs"]["played_at"]}`);
         }
 
         callback(url, auth_token, userId);
