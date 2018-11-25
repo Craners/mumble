@@ -7,7 +7,9 @@ const cors = require('cors')
 require('dotenv').config();
 
 // var mongoDB = 'mongodb://root:root@localhost:27017/mumble';
-var mongoDB = 'mongodb://amir:amir12@ds249992.mlab.com:49992/mumble';
+// TODO: to raise awareness
+let databse = process.env.databse || "ds249992.mlab.com:49992/mumble"
+var mongoDB = `mongodb://amir:amir12@${databse}`;
 mongoose.connect(mongoDB, { useNewUrlParser: true });
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));

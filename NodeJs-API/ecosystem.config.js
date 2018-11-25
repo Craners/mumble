@@ -15,10 +15,14 @@ module.exports = {
     watch: true,
     max_memory_restart: '1G',
     env: {
+      "CONFIG": "dev.conf.json",
       "NODE_ENV": "development",
+      "database": "ds249992.mlab.com:49992/mumble"
     },
     env_production: {
-      "NODE_ENV": "production"
+      "CONFIG": "conf.json",
+      "NODE_ENV": "production",
+      "database": "ds115854.mlab.com:15854/mumbleprod"
     }
   }]
 };
