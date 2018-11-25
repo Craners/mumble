@@ -5,7 +5,6 @@ let querystring = require('querystring');
 let request = require('request');
 var Profile = require('../repositories/profileRepo');
 var ProfileSchema = require('../models/Profile');
-var session = require('express-session');
 var CronJob = require('cron').CronJob;
 
 let redirect_uri = process.env.REDIRECT_URI || 'http://localhost:8888/callback';
@@ -63,10 +62,16 @@ router.get('/callback', function (req, res) {
 
 var startCronJob = function (refresh_token, callback) {
 
-    new CronJob('0 */55 * * * *', function () {
+    var cronTime = /*"5 * * * * *"*/ "0 */55 * * * *"; //starting from 55th minute, every 55 minutes.
 
-        Profile.refreshTokenAndUpdateSongs(refresh_token, callback);
+    new CronJob({
+        cronTime: cronTime,
+        onTick: function () {
 
+            Profile.refreshTokenAndUpdateSongs(refresh_token, callback);
+
+        },
+        runOnInit: true
     }).start();
 }
 
@@ -132,8 +137,8 @@ router.use('/spotify', function (req, res) {
     }
 });
 
-router.use('/assets',express.static('assets'));
-router.use('/images',express.static('images'));
+router.use('/assets', express.static('assets'));
+router.use('/images', express.static('images'));
 
 router.get("*", function (req, res) {
     res.send("Page not found");

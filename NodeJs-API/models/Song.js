@@ -12,12 +12,11 @@ var SongSchema = new Schema({
     },
     name: {
         type: String
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
     }
 });
 
 module.exports = SongSchema;
-
-module.exports.getSongs = function (id, callback) {
-    // var query = { id: id };
-    // SongSchema.findOne(query, callback);
-}

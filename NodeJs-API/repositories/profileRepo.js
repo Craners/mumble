@@ -16,6 +16,8 @@ function updateRecentlyPlayedSongs(userId, auth_token) {
 }
 
 function initializePromiseRecentlyPlayedSongs(url, auth_token, userId) {
+    console.log(`${new Date().toLocaleString()}-${url} \n`); 
+
     var options = {
         url: url,
         headers: {
@@ -34,12 +36,7 @@ function initializePromiseRecentlyPlayedSongs(url, auth_token, userId) {
         })
     });
 
-    promise.then(function (err) {
-        if(err)
-        {
-            console.log(err);
-        }
-    })
+    promise.catch(error => console.error(error));
 }
 
 function getTop(auth_token, type) {
@@ -52,7 +49,7 @@ function topPromise(url, auth_token, type) {
         .then((result) => {
             return result;
         }, function (err) {
-            console.log(err);
+            console.error(err);
         })
 }
 
@@ -111,7 +108,7 @@ function main(urls, auth_token) {
         .then((result) => {
             return result;
         }, function (err) {
-            console.log(err);
+            console.error(err);
         })
 }
 
@@ -170,7 +167,6 @@ var refreshTokenAndUpdateSongs = function (refresh_token, callback) {
         json: true
     }
     request.post(authOptions, function (error, response, body) {
-      //  console.log(body.access_token);
         callback(body.access_token);
     })
 };
@@ -191,7 +187,7 @@ var createProfile = function (body) {
         email: email
     });
     profile.save(function (err) {
-        if (err) console.log(err);
+        if (err) console.error(err);
     });
 
     return profile;
@@ -199,9 +195,9 @@ var createProfile = function (body) {
 
 //repo
 var updateProfile = function (userId, items) {
-
+    
     if (items === undefined) {
-        console.log("items not found.");
+        console.error("items not found.");
         return;
     }
 
@@ -214,12 +210,12 @@ var updateProfile = function (userId, items) {
             spotifyID: userId
         }, function (err, profile) {
             if (err) {
-                console.log(err);
+                console.error(err);
                 return;
             }
 
             if (profile === null) {
-                console.log("profile is null. (updateProfile)");
+                console.error("profile is null. (updateProfile)");
                 return;
             }
 
@@ -231,7 +227,7 @@ var updateProfile = function (userId, items) {
 
             profile.save(function (err) {
                 if (err) {
-                    console.log(err);
+                    console.error(err);
                     return;
                 }
             });
@@ -265,25 +261,30 @@ var updateSongs = function (url, userId, auth_token, callback) {
             $limit: 1
         }
     ], function (err, data) {
-        if (err) {
-            console.log(err);
-            return;
-        }
-        var item = data[0];
-
-        if (item !== undefined) {
-            var timestamp = item["songs"]["played_at"];
-            timestamp = new Date(timestamp);
-            timestamp = dateUtil.getUnixTimeStampClean(timestamp);
-
-            if (timestamp !== undefined) {
-                url = url + `&after=${timestamp}`;
+        try {
+            if (err) {
+                throw new Error(err);
             }
+            var item = data[0];
 
-            console.log(`${userId}:${item["songs"]["name"]}-${item["songs"]["played_at"]}`);
+            if (item === undefined) {
+                console.error("item is not defined. (from DB)")
+            } else {
+                var timestamp = item["songs"]["played_at"];
+                timestamp = new Date(timestamp);
+                timestamp = dateUtil.getUnixTimeStampClean(timestamp);
+
+                if (timestamp !== undefined) {
+                    url = url + `&after=${timestamp}`;
+                }
+
+                console.log(`${userId}:${item["songs"]["name"]}-${item["songs"]["played_at"]}`);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            callback(url, auth_token, userId);
         }
-
-        callback(url, auth_token, userId);
     });
 }
 
