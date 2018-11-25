@@ -111,12 +111,16 @@ router.use('/me', function (req, res) {
     });
 });
 
-router.use('/top/:type', function (req, res) {
+router.use('/top/:type/:time', function (req, res) {
     // type can be artists or tracks
     // depending on type you get a different obj with different fields
-    Profile.getTop(req.auth, req.params.type).then((something) => {
-        res.send(something);
-    });
+    if (typeof req.params.type !== 'undefined' && typeof req.params.time !== 'undefined') {
+        Profile.getTop(req.auth, req.params.type, req.params.time).then((something) => {
+            res.send(something);
+        });
+    } else {
+        res.send('Please declare type and term');
+    }
 });
 
 router.use('/spotify', function (req, res) {

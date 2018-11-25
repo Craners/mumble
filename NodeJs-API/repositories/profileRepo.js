@@ -16,7 +16,7 @@ function updateRecentlyPlayedSongs(userId, auth_token) {
 }
 
 function initializePromiseRecentlyPlayedSongs(url, auth_token, userId) {
-    console.log(`${new Date().toLocaleString()}-${url} \n`); 
+    console.log(`${new Date().toLocaleString()}-${url} \n`);
 
     var options = {
         url: url,
@@ -39,13 +39,13 @@ function initializePromiseRecentlyPlayedSongs(url, auth_token, userId) {
     promise.catch(error => console.error(error));
 }
 
-function getTop(auth_token, type) {
+function getTop(auth_token, type, time) {
 
-    return topPromise("https://api.spotify.com/v1/me/top/", auth_token, type);
+    return topPromise("https://api.spotify.com/v1/me/top/", auth_token, type, time);
 }
 
-function topPromise(url, auth_token, type) {
-    return initializeTop(url, auth_token, type)
+function topPromise(url, auth_token, type, time) {
+    return initializeTop(url, auth_token, type, time)
         .then((result) => {
             return result;
         }, function (err) {
@@ -53,12 +53,12 @@ function topPromise(url, auth_token, type) {
         })
 }
 
-function initializeTop(url, auth_token, type) {
+function initializeTop(url, auth_token, type, time) {
 
     let settings = {
         url: `${url}${type}`,
         qs: {
-            time_range: 'short_term',
+            time_range: time,
             limit: '10'
         },
         headers: {
@@ -195,7 +195,7 @@ var createProfile = function (body) {
 
 //repo
 var updateProfile = function (userId, items) {
-    
+
     if (items === undefined) {
         console.error("items not found.");
         return;
@@ -239,27 +239,27 @@ var updateProfile = function (userId, items) {
 var updateSongs = function (url, userId, auth_token, callback) {
 
     Profile.aggregate([{
-            $project: {
-                '__v': 0,
-                '_id': 0,
-                'songs._id': 0
-            }
-        },
-        {
-            $match: {
-                spotifyID: userId
-            }
-        }, {
-            $unwind: "$songs"
-        },
-        {
-            $sort: {
-                "songs.played_at": -1
-            }
-        },
-        {
-            $limit: 1
+        $project: {
+            '__v': 0,
+            '_id': 0,
+            'songs._id': 0
         }
+    },
+    {
+        $match: {
+            spotifyID: userId
+        }
+    }, {
+        $unwind: "$songs"
+    },
+    {
+        $sort: {
+            "songs.played_at": -1
+        }
+    },
+    {
+        $limit: 1
+    }
     ], function (err, data) {
         try {
             if (err) {
