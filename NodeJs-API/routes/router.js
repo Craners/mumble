@@ -151,7 +151,7 @@ router.use('/getgenre/:id', function (req, res) {
 
         var spotifyId = req.session.spotifyID;
         var auth_token = req.session.auth_token;
-        ArtistRepo.getGenre(req.params.id, auth_token).then((result) => {
+        ArtistRepo.getGenres(req.params.id, auth_token).then((result) => {
 
             res.send(result);
         });

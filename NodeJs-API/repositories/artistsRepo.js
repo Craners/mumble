@@ -1,12 +1,7 @@
-var Profile = require('../models/Profile');
 var request = require("request");
-var mongoose = require('mongoose');
-var dateUtil = require('../helpers/dateUtil');
 var baseUrl = "https://api.spotify.com/v1";
 
-async function getGenre(id, auth_token) {
-
-    console.log(baseUrl + '/artists?=ids=' + id);
+async function getGenres(id, auth_token) {
 
     var options = {
         url: baseUrl + '/artists?=ids=' + id,
@@ -21,7 +16,6 @@ async function getGenre(id, auth_token) {
             if (err) {
                 reject(err);
             } else {
-                // console.log(body.artists[0].genres);
                 resolve((body.artists[0].genres));
             }
         })
@@ -30,5 +24,5 @@ async function getGenre(id, auth_token) {
 }
 
 module.exports = {
-    getGenre
+    getGenres
 }

@@ -228,7 +228,7 @@ var updateProfile = async function (userId, items, auth_token) {
                 name: name,
                 artist_id: artist_id,
                 artist_name: artist_name,
-                genres: await ArtistRepo.getGenre(artist_id, auth_token).then((result) => {
+                genres: await ArtistRepo.getGenres(artist_id, auth_token).then((result) => {
                     return result;
                 })
             })
