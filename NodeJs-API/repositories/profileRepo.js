@@ -204,6 +204,8 @@ var updateProfile = function (userId, items) {
     items.forEach(item => {
         var spotifyId = item["track"]["id"];
         var name = item["track"]["name"];
+        var artist_id = item["track"]["artists"][0]["id"];
+        var artist_name = item["track"]["artists"][0]["name"];
         var played_at = item["played_at"];
 
         Profile.findOne({
@@ -222,7 +224,9 @@ var updateProfile = function (userId, items) {
             profile.songs.push({
                 id: spotifyId,
                 played_at: played_at,
-                name: name
+                name: name,
+                artist_id: artist_id,
+                artist_name: artist_name
             })
 
             profile.save(function (err) {

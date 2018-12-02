@@ -14,16 +14,13 @@ var SongSchema = new Schema({
         type: String
     },
     artist_id: {
-        type: String,
-        required: true
+        type: String
     },
     artist_name: {
-        type: String,
-        required: true
+        type: String
     },
     genres: {
-        type: [String],
-        required: true
+        type: [String]
     },
     createdAt: {
         type: Date,
