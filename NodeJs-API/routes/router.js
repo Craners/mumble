@@ -4,6 +4,7 @@ var path = require('path');
 let querystring = require('querystring');
 let request = require('request');
 var Profile = require('../repositories/profileRepo');
+var ArtistRepo = require('../repositories/artistsRepo');
 var ProfileSchema = require('../models/Profile');
 var CronJob = require('cron').CronJob;
 
@@ -79,7 +80,7 @@ router.use('/me', function (req, res) {
 
     Profile.getProfile(req.auth).then((profileResult) => {
 
-        var callback = function (new_access_token) {
+        var callback = async function (new_access_token) {
 
             req.session.spotifyID = req.session.spotifyID;
             req.session.loggedin = true;
@@ -91,7 +92,7 @@ router.use('/me', function (req, res) {
                 }
             });
 
-            Profile.updateRecentlyPlayedSongs(req.session.spotifyID, req.session.auth_token);
+            await Profile.updateRecentlyPlayedSongs(req.session.spotifyID, req.session.auth_token);
         };
 
         ProfileSchema = profileResult;
@@ -123,7 +124,7 @@ router.use('/top/:type/:time', function (req, res) {
     }
 });
 
-router.use('/spotify', function (req, res) {
+router.use('/spotify', async function (req, res) {
 
     if (req.session.spotifyID === undefined) {
         res.send('Spotify Id missing. Call /me');
@@ -132,9 +133,28 @@ router.use('/spotify', function (req, res) {
         var spotifyId = req.session.spotifyID;
         var auth_token = req.session.auth_token;
 
-        Profile.updateRecentlyPlayedSongs(spotifyId, auth_token);
+        await Profile.updateRecentlyPlayedSongs(spotifyId, auth_token);
         res.send('Updated profile.');
 
+    } else {
+
+        res.send('Please login first');
+    }
+});
+
+router.use('/getgenre/:id', function (req, res) {
+
+    if (req.session.spotifyID === undefined) {
+
+        res.send('Spotify Id missing. Call /me');
+    } else if (req.session.loggedin) {
+
+        var spotifyId = req.session.spotifyID;
+        var auth_token = req.session.auth_token;
+        ArtistRepo.getGenre(req.params.id, auth_token).then((result) => {
+
+            res.send(result);
+        });
     } else {
 
         res.send('Please login first');
