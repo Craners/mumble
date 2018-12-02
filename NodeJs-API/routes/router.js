@@ -4,6 +4,7 @@ var path = require('path');
 let querystring = require('querystring');
 let request = require('request');
 var Profile = require('../repositories/profileRepo');
+var Playlist = require('../repositories/playlist');
 var ProfileSchema = require('../models/Profile');
 var CronJob = require('cron').CronJob;
 
@@ -29,7 +30,7 @@ router.get('/login', function (req, res) {
         querystring.stringify({
             response_type: 'code',
             client_id: process.env.SPOTIFY_CLIENT_ID,
-            scope: 'user-read-private user-read-email user-read-recently-played user-top-read',
+            scope: 'user-read-private user-read-email user-read-recently-played user-top-read playlist-modify-public',
             redirect_uri
         }))
 })
@@ -138,6 +139,22 @@ router.use('/spotify', function (req, res) {
     } else {
 
         res.send('Please login first');
+    }
+});
+
+router.get('/playlist/:name/:desc', function (req, res) {
+    if (typeof req.params.name !== 'undefined' && typeof req.params.desc !== 'undefined') {
+        var nameOfPlaylist = req.params.name;
+        var descOfPlaylist = req.params.desc;
+        if (req.session.spotifyID === undefined) {
+            res.send('Spotify Id missing. Call /me');
+        } else if (req.session.loggedin) {
+            Playlist.createPlaylist(req.session.spotifyID, req.session.auth_token, nameOfPlaylist, descOfPlaylist);
+            res.end();
+        } else {
+
+            res.send('Please login first');
+        }
     }
 });
 
