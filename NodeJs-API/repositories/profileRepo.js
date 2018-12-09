@@ -28,16 +28,16 @@ async function initializePromiseRecentlyPlayedSongs(url, auth_token, userId) {
         json: true
     };
 
-    var promise = await new Promise(function (resolve, reject) {
-        request.get(options, function (err, resp, body) {
+    return await new Promise(async function (resolve, reject) {
+        await request.get(options, function (err, resp, body) {
             if (err) {
+                console.error(`${err}-Error update songs.`);
                 reject(err);
             } else {
                 resolve(updateProfile(userId, body["items"], auth_token));
             }
         })
     });
-
 }
 
 function getTop(auth_token, type, time) {
@@ -90,6 +90,7 @@ function expload(body, type) {
         if (type == 'artists') {
             obj.genre = index.genres;
             obj.image = index.images[0].url;
+            obj.id = index.id;
         } else {
             obj.image = index.album.images[0].url;
             obj.artistsName = [];

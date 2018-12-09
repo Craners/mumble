@@ -4,6 +4,7 @@ var path = require('path');
 let querystring = require('querystring');
 let request = require('request');
 var Profile = require('../repositories/profileRepo');
+var Playlist = require('../repositories/playlist');
 var ArtistRepo = require('../repositories/artistsRepo');
 var ProfileSchema = require('../models/Profile');
 var CronJob = require('cron').CronJob;
@@ -19,18 +20,16 @@ router.use(function timeLog(req, res, next) {
     next();
 });
 
-// Define the home page route
 router.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '../../index.html'));
 });
-// router.use(express.static(path.join(__dirname, '../../assets')));
 
 router.get('/login', function (req, res) {
     res.redirect('https://accounts.spotify.com/authorize?' +
         querystring.stringify({
             response_type: 'code',
             client_id: process.env.SPOTIFY_CLIENT_ID,
-            scope: 'user-read-private user-read-email user-read-recently-played user-top-read',
+            scope: 'user-read-private user-read-email user-read-recently-played user-top-read playlist-modify-public',
             redirect_uri
         }))
 })
@@ -77,7 +76,6 @@ var startCronJob = function (refresh_token, callback) {
 }
 
 router.use('/me', function (req, res) {
-
     Profile.getProfile(req.auth).then((profileResult) => {
 
         var callback = async function (new_access_token) {
@@ -97,9 +95,10 @@ router.use('/me', function (req, res) {
 
         ProfileSchema = profileResult;
         if (ProfileSchema.result && req.session.loggedin) {
-            req.session.spotifyID = ProfileSchema.spotifyID;
 
+            req.session.spotifyID = ProfileSchema.spotifyID;
             res.send('Welcome back! ' + ProfileSchema.name);
+
         } else if (req.session.loggedin) {
             req.session.spotifyID = ProfileSchema.spotifyID;
             startCronJob(req.session.refresh_token, callback);
@@ -125,7 +124,6 @@ router.use('/top/:type/:time', function (req, res) {
 });
 
 router.use('/spotify', async function (req, res) {
-
     if (req.session.spotifyID === undefined) {
         res.send('Spotify Id missing. Call /me');
     } else if (req.session.loggedin) {
@@ -142,14 +140,65 @@ router.use('/spotify', async function (req, res) {
     }
 });
 
+// router.get('/playlist/:name/:desc', function (req, res) {
+//     if (typeof req.params.name !== 'undefined' && typeof req.params.desc !== 'undefined') {
+//         var nameOfPlaylist = req.params.name;
+//         var descOfPlaylist = req.params.desc;
+//         if (req.session.spotifyID === undefined) {
+//             res.send('Spotify Id missing. Call /me');
+//         } else if (req.session.loggedin) {
+//             Playlist.createPlaylist(req.session.spotifyID, req.session.auth_token, nameOfPlaylist, descOfPlaylist);
+//             res.end();
+//         } else {
+
+//             res.send('Please login first');
+//         }
+//     }
+// });
+
+//artistId:44TGR1CzjKBxSHsSEy7bi9 //for testing
+//country:NL
+router.get('/playlist/:name/:artistId/:country', async function (req, res) {
+    if (typeof req.params.name !== 'undefined' && typeof req.params.artistId !== 'undefined' && typeof req.params.country !== 'undefined') {
+        var nameOfPlaylist = `${req.params.name} By Mumble`;
+        var descOfPlaylist = "Brought to you by Mumble";
+        var artistId = req.params.artistId;
+        var country = req.params.country;
+        var userId = req.session.spotifyID;
+
+        if (userId === undefined) {
+            res.send('Spotify Id missing. Call /me');
+        } else if (req.session.loggedin) {
+            var auth_token = req.session.auth_token;
+
+            //Get country from DB.
+            //Name and artist Id comes from getTopArtist endpoint (/top/artists/...)
+
+            //Create an empty playlist  
+            var playlistId = await Playlist.createPlaylist(userId, auth_token, nameOfPlaylist, descOfPlaylist);
+            //Get top 10 tracks of the artist
+            var tracks = await ArtistRepo.topTracksUris(artistId, country, auth_token);
+            //Add the tracks to the created playlist.
+            Playlist.addTrackToPlaylist(playlistId, tracks);
+                
+            res.end();
+        } else {
+
+            res.send('Please login first');
+        }
+    }
+    else
+    {
+        res.send("params not good.");
+    }
+});
+
 router.use('/getgenre/:id', function (req, res) {
 
     if (req.session.spotifyID === undefined) {
-
         res.send('Spotify Id missing. Call /me');
     } else if (req.session.loggedin) {
 
-        var spotifyId = req.session.spotifyID;
         var auth_token = req.session.auth_token;
         ArtistRepo.getGenres(req.params.id, auth_token).then((result) => {
 
