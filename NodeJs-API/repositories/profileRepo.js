@@ -15,7 +15,7 @@ function updateRecentlyPlayedSongs(userId, auth_token) {
     updateSongs(url, userId, auth_token, initializePromiseRecentlyPlayedSongs);
 }
 
-function initializePromiseRecentlyPlayedSongs(url, auth_token, userId) {
+async function initializePromiseRecentlyPlayedSongs(url, auth_token, userId) {
     console.log(`${new Date().toLocaleString()}-${url} \n`);
 
     var options = {
@@ -26,17 +26,16 @@ function initializePromiseRecentlyPlayedSongs(url, auth_token, userId) {
         json: true
     };
 
-    var promise = new Promise(function (resolve, reject) {
-        request.get(options, function (err, resp, body) {
+    return await new Promise(async function (resolve, reject) {
+        await request.get(options, function (err, resp, body) {
             if (err) {
+                console.error(`${err}-Error update songs.`);
                 reject(err);
             } else {
                 resolve(updateProfile(userId, body["items"]));
             }
         })
     });
-
-    promise.catch(error => console.error(error));
 }
 
 function getTop(auth_token, type, time) {
