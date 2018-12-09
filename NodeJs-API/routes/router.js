@@ -1,6 +1,5 @@
 var express = require('express');
 var router = express.Router();
-var bodyParser = require('body-parser');
 var path = require('path');
 let querystring = require('querystring');
 let request = require('request');
@@ -20,11 +19,6 @@ router.use(function timeLog(req, res, next) {
     console.log('request date: ' + new Date().toUTCString());
     next();
 });
-
-router.use(bodyParser.urlencoded({
-    extended: false
-}));
-router.use(bodyParser.json());
 
 router.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '../../index.html'));
@@ -164,10 +158,10 @@ router.use('/spotify', async function (req, res) {
 
 //artistId:44TGR1CzjKBxSHsSEy7bi9 //for testing
 //country:NL
-router.get('/playlist/:name/:description/:artistId/:country', async function (req, res) {
-    if (typeof req.params.name !== 'undefined' && typeof req.params.description !== 'undefined' && typeof req.params.artistId !== 'undefined' && typeof req.params.country !== 'undefined') {
+router.get('/playlist/:name/:artistId/:country', async function (req, res) {
+    if (typeof req.params.name !== 'undefined' && typeof req.params.artistId !== 'undefined' && typeof req.params.country !== 'undefined') {
         var nameOfPlaylist = `${req.params.name} By Mumble`;
-        var descOfPlaylist = req.params.description;
+        var descOfPlaylist = "Brought to you by Mumble";
         var artistId = req.params.artistId;
         var country = req.params.country;
         var userId = req.session.spotifyID;
@@ -176,6 +170,9 @@ router.get('/playlist/:name/:description/:artistId/:country', async function (re
             res.send('Spotify Id missing. Call /me');
         } else if (req.session.loggedin) {
             var auth_token = req.session.auth_token;
+
+            //Get country from DB.
+            //Name and artist Id comes from getTopArtist endpoint (/top/artists/...)
 
             //Create an empty playlist  
             var playlistId = await Playlist.createPlaylist(userId, auth_token, nameOfPlaylist, descOfPlaylist);

@@ -53,7 +53,7 @@ var addTrackToPlaylist = function(playlistId, songsString)
             if (err) {
                 reject(err);
             } else {
-                resolve(console.log(`${resp.statusCode}-${resp.statusMessage}-addTrackToPlaylist`));
+                resolve(resp.statusCode);
             }
         })
     });
