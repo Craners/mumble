@@ -3,16 +3,18 @@ var request = require("request");
 var mongoose = require('mongoose');
 var dateUtil = require('../helpers/dateUtil');
 var baseUrl = "https://api.spotify.com/v1/me";
+var ArtistRepo = require('../repositories/artistsRepo');
+
 
 function getProfile(auth_token) {
 
     return main(baseUrl, auth_token);
 }
 
-function updateRecentlyPlayedSongs(userId, auth_token) {
+async function updateRecentlyPlayedSongs(userId, auth_token) {
     var url = `${baseUrl}/player/recently-played?limit=50`;
 
-    updateSongs(url, userId, auth_token, initializePromiseRecentlyPlayedSongs);
+    await updateSongs(url, userId, auth_token, initializePromiseRecentlyPlayedSongs);
 }
 
 async function initializePromiseRecentlyPlayedSongs(url, auth_token, userId) {
@@ -32,7 +34,7 @@ async function initializePromiseRecentlyPlayedSongs(url, auth_token, userId) {
                 console.error(`${err}-Error update songs.`);
                 reject(err);
             } else {
-                resolve(updateProfile(userId, body["items"]));
+                resolve(updateProfile(userId, body["items"], auth_token));
             }
         })
     });
@@ -88,6 +90,7 @@ function expload(body, type) {
         if (type == 'artists') {
             obj.genre = index.genres;
             obj.image = index.images[0].url;
+            obj.id = index.id;
         } else {
             obj.image = index.album.images[0].url;
             obj.artistsName = [];
@@ -193,14 +196,14 @@ var createProfile = function (body) {
 };
 
 //repo
-var updateProfile = function (userId, items) {
+var updateProfile = async function (userId, items, auth_token) {
 
     if (items === undefined) {
         console.error("items not found.");
         return;
     }
 
-    items.forEach(item => {
+    await items.forEach(item => {
         var spotifyId = item["track"]["id"];
         var name = item["track"]["name"];
         var artist_id = item["track"]["artists"][0]["id"];
@@ -209,7 +212,7 @@ var updateProfile = function (userId, items) {
 
         Profile.findOne({
             spotifyID: userId
-        }, function (err, profile) {
+        }, async function (err, profile) {
             if (err) {
                 console.error(err);
                 return;
@@ -225,7 +228,10 @@ var updateProfile = function (userId, items) {
                 played_at: played_at,
                 name: name,
                 artist_id: artist_id,
-                artist_name: artist_name
+                artist_name: artist_name,
+                genres: await ArtistRepo.getGenres(artist_id, auth_token).then((result) => {
+                    return result;
+                })
             })
 
             profile.save(function (err) {
