@@ -210,6 +210,28 @@ router.use('/getgenre/:id', function (req, res) {
     }
 });
 
+router.use('/history/:time', function (req, res) {
+
+    if (req.session.spotifyID === undefined) {
+
+        res.send('Spotify Id missing. Call /me');
+    } else if (req.session.loggedin) {
+
+        var spotifyId = req.session.spotifyID;
+        var auth_token = req.session.auth_token;
+        var tempdate = new Date(req.params.time);
+        console.log('day is: '+tempdate.getDate());
+        
+        ArtistRepo.historyTimeRetrieval(spotifyId, req.params.time).then((result) => {
+
+            res.send(result);
+        });
+    } else {
+
+        res.send('Please login first');
+    }
+});
+
 router.use('/assets', express.static('assets'));
 router.use('/images', express.static('images'));
 

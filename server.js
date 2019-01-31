@@ -9,8 +9,10 @@ require('dotenv').config();
 // var mongoDB = 'mongodb://root:root@localhost:27017/mumble';
 // TODO: to raise awareness
 let database = process.env.database
+let user = process.env.user
+let pass = process.env.pass
 console.info(database);
-var mongoDB = `mongodb://amir:amir12@${database}`;
+var mongoDB = `mongodb://${user}:${pass}@${database}`;
 mongoose.connect(mongoDB, { useNewUrlParser: true });
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));

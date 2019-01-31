@@ -1,5 +1,6 @@
 var request = require("request");
 var baseUrl = "https://api.spotify.com/v1";
+var Profile = require('../models/Profile');
 
 async function getGenres(id, auth_token) {
 
@@ -57,7 +58,49 @@ async function topTracksUris(artistId, country, auth_token)
     });
 }
 
+async function historyTimeRetrieval(id, time) {
+
+    Profile.aggregate([{
+        $project: {
+            '__v': 0,
+            '_id': 0,
+            'songs._id': 0
+        }
+    },
+    {
+        $match: {
+            spotifyID: id,
+            //check this date later. im not 100% sure if it's working correctly
+            'songs.played_at': {
+                $gte: new Date("2018-12-08T00:00:00.0Z"),
+                $lt: new Date("2018-12-20T00:00:00.0Z")
+            }
+        }
+    }, {
+        $unwind: '$songs'
+    },
+    {
+        $sort: {
+            'songs.played_at': -1
+        }
+
+    },
+    {
+        $limit: 50
+    }
+    ], function (err, data) {
+        // console.log(data);
+        data.forEach(el => {
+            console.log(el.songs.played_at);
+            console.log(el.songs.artist_name);
+
+        });
+    });
+
+}
+
 module.exports = {
     getGenres,
-    topTracksUris
+    topTracksUris,
+    historyTimeRetrieval
 }
